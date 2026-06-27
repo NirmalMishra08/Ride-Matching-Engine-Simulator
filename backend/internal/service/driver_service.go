@@ -26,3 +26,5 @@ func (s *DriverService) GetDriverData(ctx context.Context, id uuid.UUID) ([]db.U
 	}
 	return driver, nil
 }
+
+

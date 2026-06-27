@@ -10,28 +10,19 @@ import (
 )
 
 const getAllUser = `-- name: GetAllUser :many
-SELECT id, name, email, role, password_hash, provider, created_at, updated_at from users
+SELECT id, name, phone from riders
 `
 
-func (q *Queries) GetAllUser(ctx context.Context) ([]User, error) {
+func (q *Queries) GetAllUser(ctx context.Context) ([]Rider, error) {
 	rows, err := q.db.Query(ctx, getAllUser)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []Rider
 	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Email,
-			&i.Role,
-			&i.PasswordHash,
-			&i.Provider,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
+		var i Rider
+		if err := rows.Scan(&i.ID, &i.Name, &i.Phone); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

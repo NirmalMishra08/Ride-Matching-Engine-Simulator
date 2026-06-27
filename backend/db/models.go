@@ -11,6 +11,49 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type DriverStatus string
+
+const (
+	DriverStatusONLINE  DriverStatus = "ONLINE"
+	DriverStatusOFFLINE DriverStatus = "OFFLINE"
+	DriverStatusBUSY    DriverStatus = "BUSY"
+)
+
+func (e *DriverStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = DriverStatus(s)
+	case string:
+		*e = DriverStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for DriverStatus: %T", src)
+	}
+	return nil
+}
+
+type NullDriverStatus struct {
+	DriverStatus DriverStatus
+	Valid        bool // Valid is true if DriverStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullDriverStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.DriverStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.DriverStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullDriverStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.DriverStatus), nil
+}
+
 type Provider string
 
 const (
@@ -52,6 +95,93 @@ func (ns NullProvider) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.Provider), nil
+}
+
+type RideRequestStatus string
+
+const (
+	RideRequestStatusSEARCHING RideRequestStatus = "SEARCHING"
+	RideRequestStatusMATCHED   RideRequestStatus = "MATCHED"
+	RideRequestStatusCANCELLED RideRequestStatus = "CANCELLED"
+	RideRequestStatusCOMPLETED RideRequestStatus = "COMPLETED"
+)
+
+func (e *RideRequestStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RideRequestStatus(s)
+	case string:
+		*e = RideRequestStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RideRequestStatus: %T", src)
+	}
+	return nil
+}
+
+type NullRideRequestStatus struct {
+	RideRequestStatus RideRequestStatus
+	Valid             bool // Valid is true if RideRequestStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRideRequestStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.RideRequestStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RideRequestStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRideRequestStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RideRequestStatus), nil
+}
+
+type TripStatus string
+
+const (
+	TripStatusCOMPLETED TripStatus = "COMPLETED"
+	TripStatusONGOING   TripStatus = "ONGOING"
+	TripStatusREJECTED  TripStatus = "REJECTED"
+)
+
+func (e *TripStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TripStatus(s)
+	case string:
+		*e = TripStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TripStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTripStatus struct {
+	TripStatus TripStatus
+	Valid      bool // Valid is true if TripStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTripStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TripStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TripStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTripStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TripStatus), nil
 }
 
 type UserRole string
@@ -96,13 +226,37 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
-type User struct {
-	ID           pgtype.UUID
-	Name         string
-	Email        string
-	Role         NullUserRole
-	PasswordHash pgtype.Text
-	Provider     Provider
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+type Driver struct {
+	ID        pgtype.UUID
+	Name      string
+	Status    NullDriverStatus
+	Latitude  pgtype.Text
+	Longitude pgtype.Text
+	UpdatedAt interface{}
+}
+
+type RideRequest struct {
+	ID             pgtype.UUID
+	RiderID        pgtype.UUID
+	PickupLat      pgtype.Text
+	PickupLong     pgtype.Text
+	DestinationLat pgtype.Text
+	DestinationLat pgtype.Text
+	Status         NullRideRequestStatus
+	CreatedAt      interface{}
+}
+
+type Rider struct {
+	ID    pgtype.UUID
+	Name  pgtype.Text
+	Phone pgtype.Int8
+}
+
+type Trip struct {
+	ID            pgtype.UUID
+	RideRequestID pgtype.UUID
+	DriverID      pgtype.UUID
+	Status        interface{}
+	StartedAt     interface{}
+	CompletedAt   interface{}
 }

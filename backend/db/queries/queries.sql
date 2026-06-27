@@ -1,2 +1,2 @@
 -- name: GetAllUser :many
-SELECT * from users;
+SELECT * from riders;
