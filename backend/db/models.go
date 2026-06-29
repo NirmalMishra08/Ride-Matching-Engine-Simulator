@@ -226,37 +226,102 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
-type Driver struct {
-	ID        pgtype.UUID
-	Name      string
-	Status    NullDriverStatus
-	Latitude  pgtype.Text
-	Longitude pgtype.Text
-	UpdatedAt interface{}
+type VehicleType string
+
+const (
+	VehicleTypeSEDAN VehicleType = "SEDAN"
+	VehicleTypeSUV   VehicleType = "SUV"
+)
+
+func (e *VehicleType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = VehicleType(s)
+	case string:
+		*e = VehicleType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for VehicleType: %T", src)
+	}
+	return nil
+}
+
+type NullVehicleType struct {
+	VehicleType VehicleType
+	Valid       bool // Valid is true if VehicleType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullVehicleType) Scan(value interface{}) error {
+	if value == nil {
+		ns.VehicleType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.VehicleType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullVehicleType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.VehicleType), nil
+}
+
+type DriverLocation struct {
+	DriverID  pgtype.UUID
+	Latitude  pgtype.Float8
+	Longitude pgtype.Float8
+}
+
+type DriverProfile struct {
+	UserID        pgtype.UUID
+	LicenseNumber pgtype.Int4
+	Status        NullDriverStatus
+	Rating        pgtype.Float8
+	UpdatedAt     pgtype.Timestamptz
 }
 
 type RideRequest struct {
-	ID             pgtype.UUID
-	RiderID        pgtype.UUID
-	PickupLat      pgtype.Text
-	PickupLong     pgtype.Text
-	DestinationLat pgtype.Text
-	DestinationLat pgtype.Text
-	Status         NullRideRequestStatus
-	CreatedAt      interface{}
+	ID              pgtype.UUID
+	RiderID         pgtype.UUID
+	PickupLat       pgtype.Float8
+	PickupLong      pgtype.Float8
+	DestinationLat  pgtype.Float8
+	DestinationLong pgtype.Float8
+	Status          NullRideRequestStatus
+	CreatedAt       pgtype.Timestamptz
 }
 
-type Rider struct {
-	ID    pgtype.UUID
-	Name  pgtype.Text
-	Phone pgtype.Int8
+type RiderProfile struct {
+	UserID pgtype.UUID
+	Rating pgtype.Float8
 }
 
 type Trip struct {
 	ID            pgtype.UUID
 	RideRequestID pgtype.UUID
 	DriverID      pgtype.UUID
-	Status        interface{}
-	StartedAt     interface{}
-	CompletedAt   interface{}
+	Status        NullTripStatus
+	StartedAt     pgtype.Timestamptz
+	CompletedAt   pgtype.Timestamptz
+}
+
+type User struct {
+	ID           pgtype.UUID
+	Name         string
+	Role         UserRole
+	Email        string
+	Phone        pgtype.Text
+	PasswordHash pgtype.Text
+	Provider     NullProvider
+	CreatedAt    pgtype.Timestamptz
+}
+
+type Vehicle struct {
+	ID          pgtype.UUID
+	DriverID    pgtype.UUID
+	Model       pgtype.Text
+	PlateNumber pgtype.Text
+	Type        NullVehicleType
 }

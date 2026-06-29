@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/service"
 	"net/http"
+	"strings"
 )
 
 type DriverHandler struct {
@@ -20,6 +21,13 @@ type CreateDriverReqiest struct{
 	
 }
 
-func (h *DriverHandler) CreateaRider(w http.ResponseWriter, r *http.Request) {
-    
+func (h *DriverHandler) AuthHandler(w http.ResponseWriter, r *http.Request) {
+     
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == ""{
+		util.ErrJson(w, ErrHeaderMissing)
+	}
+
+	authToken:= strings.SplitN(authHeader, " ")
+
 }

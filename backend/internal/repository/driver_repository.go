@@ -16,7 +16,3 @@ func NewDriverRepository(q *db.Queries) *DriverRepository {
 		q: q,
 	}
 }
-
-func (r *DriverRepository) GetAllUser(ctx context.Context, id uuid.UUID) ([]db.User, error) {
-	return r.q.GetAllUser(ctx)
-}
